@@ -1,0 +1,65 @@
+# Prova - API de Consulta de Usuários
+
+Este projeto implementa uma API RESTful para a consulta paginada e dinâmica de usuários. A API é protegida por autenticação baseada em JWT (JSON Web Token) e utiliza Spring Boot.
+
+## Funcionalidades Principais
+
+* **Autenticação JWT:** Endpoint de login que gera um token para acesso às rotas protegidas.
+* **Filtros Dinâmicos:** A consulta de usuários permite filtrar por nome, CPF e telefone de forma combinada e opcional.
+* **Paginação e Ordenação:** A resposta da API é paginada e pode ser ordenada dinamicamente pelos campos da entidade.
+* **População de Dados (Seeding):** O banco de dados em memória (H2) é populado com dados iniciais para facilitar os testes.
+
+## Estrutura do Projeto
+
+* **Entity: User.java** - foi criada para apresentar a tabela user com os dados id, nome e cpf.
+
+* **Repository: UserRepository.java** - foi criado o repository para manipular os dados da tabela, sem os comando sql.
+
+* **DTO: UserDTO.java** - foi criado o DTO para proteger a estrutura dos dados do banco de dados ao retornar.
+
+* **Service: UserService.java** - Foi criado a função findUsers, utilizando o specification para a busca dinâmica com os parâmetros se passados, e aí passa para o repository buscar os dados, ele devolve uma Page<User> que depois passa a ser uma lista de UserDTO.
+
+* **Controller: UserController.java** - Foi criado o endpoint: “/api/users”.
+
+* **Data: data.sql** - foi criado para adicionar uns dados iniciais ao banco de dados para teste.
+
+## Desafios e Soluções na Implementação
+
+Durante o desenvolvimento, alguns desafios foram superados para garantir o funcionamento correto da aplicação:
+
+1.  **Incompatibilidade de Versão do Java:** O projeto foi inicialmente configurado com Java 24, o que causava instabilidade. O ambiente foi corrigido para utilizar o **Java 21 (LTS)**, versão com suporte oficial do Spring Boot 3.3.
+
+2.  **Conflitos de `import`:** Houve desafios com a importação de classes com nomes duplicados (como `Page`, `Predicate`, `Pageable`). O problema foi resolvido garantindo que as versões corretas das bibliotecas (`jakarta.persistence` e `org.springframework.data`) fossem importadas.
+
+3.  **Ordem de Inicialização do Banco:** O script `data.sql` era executado antes do Hibernate criar as tabelas, causando um erro de "Table not found". A solução foi adicionar a seguinte propriedade no `application.properties` para garantir a ordem correta:
+    ```properties
+    spring.jpa.defer-datasource-initialization=true
+    ```
+
+## Como Executar
+
+1.  **Pré-requisitos:**
+    * Java 21 (LTS)
+    * Maven
+
+2.  **Inicie a aplicação** através da sua IDE (clicando em "Run" na classe `ProvaApplication`) ou via linha de comando:
+    ```bash
+    mvn spring-boot:run
+    ```
+
+## Como Testar (via Postman)
+
+1.  **Obtenha o Token:** Faça uma requisição `POST` para `http://localhost:8080/api/auth/login` com o corpo:
+    ```json
+    {"username": "pleno", "password": "123456"}
+    ```
+    Copie o token JWT da resposta.
+
+2.  **Consulte os Usuários:** Crie uma requisição `GET` para `http://localhost:8080/api/users`.
+    * Na aba **Authorization**, selecione **Bearer Token** e cole o token.
+    * Na aba **Params**, adicione os filtros desejados.
+
+    **Exemplo de consulta completa:**
+    `GET http://localhost:8080/api/users?name=Marco&page=0&size=5&sort=name,asc` 
+
+
